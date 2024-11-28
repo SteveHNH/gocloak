@@ -18,7 +18,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/segmentio/ksuid"
 
-	"github.com/Nerzal/gocloak/v13/pkg/jwx"
+	"github.com/SteveHNH/gocloak/v13/pkg/jwx"
 )
 
 // GoCloak provides functionalities to talk to Keycloak.
@@ -1698,6 +1698,29 @@ func (g *GoCloak) GetGroup(ctx context.Context, token, realm, groupID string) (*
 	}
 
 	return &result, nil
+}
+
+
+// GetChildGroups get child groups of group with id in realm
+func (g *GoCloak) GetChildGroups(ctx context.Context, token, realm, groupID string, params GetChildGroupsParams) ([]*Group, error) {
+	const errMessage = "could not get child groups"
+
+	var result []*Group
+	queryParams, err := GetQueryParams(params)
+	if err != nil {
+		return nil, errors.Wrap(err, errMessage)
+	}
+
+	resp, err := g.GetRequestWithBearerAuth(ctx, token).
+		SetResult(&result).
+		SetQueryParams(queryParams).
+		Get(g.getAdminRealmURL(realm, "groups", groupID, "children"))
+
+	if err := checkForError(resp, err, errMessage); err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 // GetGroupByPath get group with path in realm
